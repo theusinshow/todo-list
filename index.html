@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>To-Do List</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --surface2:  #22263a;
+      --border:    #2e3347;
+      --accent:    #6c63ff;
+      --accent-h:  #8b84ff;
+      --danger:    #ff5f6d;
+      --danger-h:  #ff7c87;
+      --text:      #e4e6f1;
+      --muted:     #6b7280;
+      --done:      #3b3f52;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, var(--accent), #c084fc);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    header p {
+      color: var(--muted);
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Card container ── */
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 8px 40px rgba(0,0,0,.45);
+    }
+
+    /* ── Input row ── */
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-row input::placeholder { color: var(--muted); }
+
+    .input-row input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,.2);
+    }
+
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .btn-add:hover  { background: var(--accent-h); }
+    .btn-add:active { transform: scale(.95); }
+
+    /* ── Filters ── */
+    .filters {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .filter-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all .2s;
+    }
+
+    .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+
+    .filter-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    /* ── Task list ── */
+    #task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      animation: slideIn .22s ease;
+      transition: border-color .2s, opacity .25s;
+    }
+
+    .task-item:hover { border-color: var(--accent); }
+
+    .task-item.done {
+      opacity: .55;
+      border-color: var(--done);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* custom checkbox */
+    .check-wrap {
+      position: relative;
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+    }
+
+    .check-wrap input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .check-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--muted);
+      border-radius: 6px;
+      transition: background .2s, border-color .2s;
+      pointer-events: none;
+    }
+
+    .check-box svg {
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .check-wrap input:checked ~ .check-box {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .check-wrap input:checked ~ .check-box svg { opacity: 1; }
+
+    /* task text */
+    .task-text {
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      word-break: break-word;
+      transition: text-decoration .2s, color .2s;
+    }
+
+    .task-item.done .task-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    /* delete button */
+    .btn-delete {
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color .2s, background .2s;
+      flex-shrink: 0;
+    }
+
+    .btn-delete:hover {
+      color: var(--danger);
+      background: rgba(255,95,109,.1);
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      text-align: center;
+      padding: 36px 0 20px;
+      color: var(--muted);
+    }
+
+    .empty svg { margin-bottom: 12px; opacity: .4; }
+    .empty p   { font-size: 0.9rem; }
+
+    /* ── Footer summary ── */
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .btn-clear {
+      background: transparent;
+      border: none;
+      color: var(--danger);
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 2px 0;
+      transition: color .2s;
+    }
+
+    .btn-clear:hover { color: var(--danger-h); }
+    .btn-clear:disabled { opacity: .35; cursor: default; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>My Tasks</h1>
+    <p>Organize seu dia com clareza</p>
+  </header>
+
+  <div class="card">
+
+    <!-- Input -->
+    <div class="input-row">
+      <input id="task-input" type="text" placeholder="Adicionar nova tarefa..." maxlength="200" />
+      <button class="btn-add" id="btn-add" title="Adicionar tarefa">+</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">Todas</button>
+      <button class="filter-btn" data-filter="pending">Pendentes</button>
+      <button class="filter-btn" data-filter="done">Concluidas</button>
+    </div>
+
+    <!-- List -->
+    <ul id="task-list"></ul>
+
+    <!-- Summary -->
+    <div class="summary">
+      <span id="summary-text"></span>
+      <button class="btn-clear" id="btn-clear">Limpar concluidas</button>
+    </div>
+
+  </div>
+
+  <script>
+    const input      = document.getElementById('task-input');
+    const btnAdd     = document.getElementById('btn-add');
+    const list       = document.getElementById('task-list');
+    const summaryEl  = document.getElementById('summary-text');
+    const btnClear   = document.getElementById('btn-clear');
+    const filterBtns = document.querySelectorAll('.filter-btn');
+
+    let tasks  = JSON.parse(localStorage.getItem('tasks') || '[]');
+    let filter = 'all';
+
+    /* ── Persistence ── */
+    function save() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    /* ── Render ── */
+    function render() {
+      list.innerHTML = '';
+
+      const visible = tasks.filter(t =>
+        filter === 'all'     ? true :
+        filter === 'done'    ? t.done :
+        /* pending */          !t.done
+      );
+
+      if (visible.length === 0) {
+        list.innerHTML = `
+          <li class="empty">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="5" width="18" height="16" rx="2"/>
+              <path d="M3 10h18M8 3v4M16 3v4"/>
+            </svg>
+            <p>${filter === 'done' ? 'Nenhuma tarefa concluida ainda.' : 'Nenhuma tarefa por aqui.'}</p>
+          </li>`;
+      } else {
+        visible.forEach(t => {
+          const li = document.createElement('li');
+          li.className = 'task-item' + (t.done ? ' done' : '');
+          li.dataset.id = t.id;
+          li.innerHTML = `
+            <label class="check-wrap" title="${t.done ? 'Marcar como pendente' : 'Marcar como concluida'}">
+              <input type="checkbox" ${t.done ? 'checked' : ''} />
+              <span class="check-box">
+                <svg width="13" height="13" viewBox="0 0 12 12" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="1.5 6 4.5 9 10.5 3"/>
+                </svg>
+              </span>
+            </label>
+            <span class="task-text">${escapeHTML(t.text)}</span>
+            <button class="btn-delete" title="Deletar tarefa">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </button>`;
+
+          li.querySelector('input[type="checkbox"]').addEventListener('change', () => toggle(t.id));
+          li.querySelector('.btn-delete').addEventListener('click', () => remove(t.id));
+
+          list.appendChild(li);
+        });
+      }
+
+      updateSummary();
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function updateSummary() {
+      const total  = tasks.length;
+      const done   = tasks.filter(t => t.done).length;
+      summaryEl.textContent = total === 0
+        ? 'Nenhuma tarefa'
+        : `${done} de ${total} concluida${done !== 1 ? 's' : ''}`;
+      btnClear.disabled = done === 0;
+    }
+
+    /* ── Actions ── */
+    function addTask() {
+      const text = input.value.trim();
+      if (!text) { input.focus(); return; }
+      tasks.unshift({ id: Date.now(), text, done: false });
+      save();
+      render();
+      input.value = '';
+      input.focus();
+    }
+
+    function toggle(id) {
+      const t = tasks.find(t => t.id === id);
+      if (t) { t.done = !t.done; save(); render(); }
+    }
+
+    function remove(id) {
+      const li = list.querySelector(`[data-id="${id}"]`);
+      if (li) {
+        li.style.opacity = '0';
+        li.style.transform = 'translateX(20px)';
+        li.style.transition = 'opacity .2s, transform .2s';
+        setTimeout(() => {
+          tasks = tasks.filter(t => t.id !== id);
+          save();
+          render();
+        }, 200);
+      }
+    }
+
+    function clearDone() {
+      tasks = tasks.filter(t => !t.done);
+      save();
+      render();
+    }
+
+    /* ── Events ── */
+    btnAdd.addEventListener('click', addTask);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') addTask(); });
+    btnClear.addEventListener('click', clearDone);
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter;
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+      });
+    });
+
+    /* ── Init ── */
+    render();
+  </script>
+</body>
+</html>
