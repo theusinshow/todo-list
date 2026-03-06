@@ -18,9 +18,7 @@ Construída com HTML, CSS e JavaScript puro — zero dependências, zero framewo
 
 <div align="center">
 
-> _Abra o `index.html` no navegador para ver o resultado._
-
-![Screenshot placeholder](https://placehold.co/720x440/1a1d27/6c63ff?text=My+Tasks+%E2%80%94+Dark+Mode+Preview)
+![Screenshot](assets/screenshot.png)
 
 </div>
 
@@ -95,8 +93,10 @@ Acesse `http://localhost:3000` no navegador.
 
 ```
 todo-list/
-└── index.html    # Aplicação completa (HTML + CSS + JS)
-└── README.md     # Documentação
+├── index.html         # Aplicação completa (HTML + CSS + JS)
+├── assets/
+│   └── screenshot.png # Screenshot da aplicação
+└── README.md          # Documentação
 ```
 
 ---
